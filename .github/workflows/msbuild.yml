@@ -1,9 +1,13 @@
 name: MSBuild
 
-on: [push]
+# Trigger the workflow manually (or still on push if you want both)
+on:
+  workflow_dispatch: # This lets you run it on demand
+  push: # Keeping this in case you still want auto-builds on push
 
 env:
   SOLUTION_FILE_PATH: src/Dump1090.sln
+
 jobs:
   build:
     runs-on: windows-latest
@@ -11,7 +15,7 @@ jobs:
       fail-fast: true
       matrix:
         BUILD_CONFIGURATION: [ Release ]
-        BUILD_PLATFORM:      [ x86, x64 ]
+        BUILD_PLATFORM: [ x86, x64 ]
 
     steps:
     - uses: actions/checkout@v3
@@ -23,8 +27,12 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild /m /p:Configuration=${{matrix.BUILD_CONFIGURATION}} /p:Platform=${{matrix.BUILD_PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
 
-# test:
-#   steps:
-#    run: start dump1090.exe --config dump1090-ci.cfg --debug Gn --net --logfile dump1090-ci.log
-#         py.exe -3 tools\SBS_client.py --host localhost --wait 10 --port 30001 raw-out
-#
+  # Uncomment and fix this test job if you wanna use it later
+  # test:
+  #   runs-on: windows-latest
+  #   needs: build # Make sure it runs after build
+  #   steps:
+  #     - name: Run dump1090 and SBS_client
+  #       run: |
+  #         start dump1090.exe --config dump1090-ci.cfg --debug Gn --net --logfile dump1090-ci.log
+  #         py.exe -3 tools\SBS_client.py --host localhost --wait 10 --port 30001 raw-out
