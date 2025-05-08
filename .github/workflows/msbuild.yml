@@ -1,9 +1,7 @@
-name: MSBuild
+name: MSBuild and Release
 
-# Trigger the workflow manually (or still on push if you want both)
 on:
-  workflow_dispatch: # This lets you run it on demand
-  push: # Keeping this in case you still want auto-builds on push
+  workflow_dispatch: # Manual trigger
 
 env:
   SOLUTION_FILE_PATH: src/Dump1090.sln
@@ -27,12 +25,56 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild /m /p:Configuration=${{matrix.BUILD_CONFIGURATION}} /p:Platform=${{matrix.BUILD_PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
 
-  # Uncomment and fix this test job if you wanna use it later
-  # test:
-  #   runs-on: windows-latest
-  #   needs: build # Make sure it runs after build
-  #   steps:
-  #     - name: Run dump1090 and SBS_client
-  #       run: |
-  #         start dump1090.exe --config dump1090-ci.cfg --debug Gn --net --logfile dump1090-ci.log
-  #         py.exe -3 tools\SBS_client.py --host localhost --wait 10 --port 30001 raw-out
+    - name: Zip Artifacts
+      run: |
+        $platform = "${{ matrix.BUILD_PLATFORM }}"
+        $config = "${{ matrix.BUILD_CONFIGURATION }}"
+        $outputDir = "src\bin\$platform\$config"
+        Compress-Archive -Path $outputDir\* -DestinationPath "dump1090-$platform-$config.zip"
+      shell: pwsh
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dump1090-${{ matrix.BUILD_PLATFORM }}-${{ matrix.BUILD_CONFIGURATION }}
+        path: dump1090-${{ matrix.BUILD_PLATFORM }}-${{ matrix.BUILD_CONFIGURATION }}.zip
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_id }}
+        release_name: Release ${{ github.run_id }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets (x86)
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/dump1090-x86-Release/dump1090-x86-Release.zip
+        asset_name: dump1090-x86-Release.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Release Assets (x64)
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/dump1090-x64-Release/dump1090-x64-Release.zip
+        asset_name: dump1090-x64-Release.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
