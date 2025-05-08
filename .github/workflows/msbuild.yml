@@ -36,42 +36,42 @@ jobs:
           name: dump1090-${{ matrix.platform }}-${{ matrix.configuration }}
           path: dump1090-${{ matrix.platform }}-${{ matrix.configuration }}.zip
 
-    release:
-      runs-on: ubuntu-latest
-      needs: build
-      steps:
-        - name: Download Artifacts
-          uses: actions/download-artifact@v3
-          with:
-            path: artifacts
-   
-        - name: Create Release
-          id: create_release
-          uses: actions/create-release@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            tag_name: v${{ github.event.inputs.version }}
-            release_name: Release ${{ github.event.inputs.version }}
-            draft: false
-            prerelease: false
-   
-        - name: Upload Release Asset (x86)
-          uses: actions/upload-release-asset@v1
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: artifacts/dump1090-x86-Release/dump1090-x86-Release.zip
-            asset_name: dump1090-x86-Release.zip
-            asset_content_type: application/zip
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-   
-        - name: Upload Release Asset (x64)
-          uses: actions/upload-release-asset@v1
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: artifacts/dump1090-x64-Release/dump1090-x64-Release.zip
-            asset_name: dump1090-x64-Release.zip
-            asset_content_type: application/zip
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # release:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   steps:
+  #     - name: Download Artifacts
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         path: artifacts
+  #
+  #     - name: Create Release
+  #       id: create_release
+  #       uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         tag_name: v${{ github.event.inputs.version }}
+  #         release_name: Release ${{ github.event.inputs.version }}
+  #         draft: false
+  #         prerelease: false
+  #
+  #     - name: Upload Release Asset (x86)
+  #       uses: actions/upload-release-asset@v1
+  #       with:
+  #         upload_url: ${{ steps.create_release.outputs.upload_url }}
+  #         asset_path: artifacts/dump1090-x86-Release/dump1090-x86-Release.zip
+  #         asset_name: dump1090-x86-Release.zip
+  #         asset_content_type: application/zip
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #
+  #     - name: Upload Release Asset (x64)
+  #       uses: actions/upload-release-asset@v1
+  #       with:
+  #         upload_url: ${{ steps.create_release.outputs.upload_url }}
+  #         asset_path: artifacts/dump1090-x64-Release/dump1090-x64-Release.zip
+  #         asset_name: dump1090-x64-Release.zip
+  #         asset_content_type: application/zip
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
