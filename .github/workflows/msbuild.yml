@@ -25,9 +25,13 @@ jobs:
       - name: Build Solution
         run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }} src/Dump1090.sln
 
+      - name: List Build Output
+        run: Get-ChildItem -Path src -Recurse | Where-Object { $_.PSIsContainer -eq $false }
+        shell: pwsh
+
       - name: Zip Artifacts
         run: |
-          Compress-Archive -Path src/bin/${{ matrix.platform }}/${{ matrix.configuration }}/* -DestinationPath dump1090-${{ matrix.platform }}-${{ matrix.configuration }}.zip
+          Compress-Archive -Path src/${{ matrix.configuration }}/${{ matrix.platform }}/* -DestinationPath dump1090-${{ matrix.platform }}-${{ matrix.configuration }}.zip
         shell: pwsh
 
       - name: Upload Artifact
